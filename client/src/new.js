@@ -1,3 +1,107 @@
+// import "./App.css";
+// import { ethers } from "ethers";
+// import { useEffect, useState } from "react";
+
+// import bank from "./contracts/Bank.sol/Bank.json";
+// import matic from "./contracts/Matic.sol/Matic.json";
+// import shib from "./contracts/Shib.sol/Shib.json";
+// import usdt from "./contracts/Usdt.sol/Usdt.json";
+
+// function App() {
+  
+//   //signer is used to interact with the blockchain as a user
+//   //a provider  is the most basic way to interact with the blockchain using ethers.js
+//   const [Provider, setProvider] = useState(undefined);
+//   const [Signer, setSigner] = useState(undefined);
+//   const [SingerAddress, setSignerAddress] = useState(undefined);
+//   const [BankContract, setBankContract] = useState(undefined);
+  
+//   const [tokenContracts, setTokenContract] = useState({});
+//   const [tokenBalances, setTokenBalances] = useState({});
+//   const [tokenSymbols, setTokenSymbols] = useState([]);
+
+//   const [amount , setAmount] = useState(0);
+//   const [showModal, setShowmodal] = useState(false);
+//   const [selectedSymbol, setSelectedSymbol] = useState(undefined);
+//   const [isDeposit, setIsDeposit] = useState(true);
+  
+
+//   //conversions
+//   const toBytes32 = text => (ethers.utils.formatBytes32String(text)); 
+//   const toString = bytes32 => (ethers.utils.parseBytes32String(bytes32));
+//   const toWei = ether => (ethers.utils.parseEther(ether));
+//   const toEther = wei => (ethers.utils.formatEther(wei).toString());
+//   const toRound = num => (Number(num).toFixed(2));
+
+//   useEffect(() => {
+//     const bankAddress = "0x2ED2BD2832573432ca508347aD4636fFb17f0301";
+//     const bankABI = bank.abi;
+
+//     const maticAddress = "0x6fa805874201c5F77C7e07AcA0f4B1fAa2bA21Df";
+//     const maticABI = matic.abi;
+
+//     const shibAddress = "0xb81071D1ED34dB03C3E821a278184C2368e8c6b0";
+//     const shibABI = shib.abi;
+
+//     const usdtAddress = "0x72e66e54c569B06827bF86417AE9C9D7a5B997B4";
+//     const usdtABI = usdt.abi;
+
+//     const init = async () => {
+//       //first we get the provider
+//       const provider = await new ethers.providers.Web3Provider(window.ethereum);
+//       setProvider(provider);
+//       setSigner( provider.getSigner());
+
+//       //then we get the instance of our bank contract
+//       const bankContract = await new ethers.Contract(bankAddress, bankABI);
+//       setBankContract(bankContract);
+
+//       //to get token symbols from the contract
+//       await bankContract.connect(provider).getWhiteListedTokensSymbols()
+//       .then((result) => {
+//         const symbols = result.map(s => toString(s));
+//         setTokenSymbols(symbols);
+//         console.log(symbols);
+//       });   
+//     };
+//   });
+
+
+//   const getTokenContract = async (symbol, BankContract, Provider) =>{
+
+//     const address = await BankContract.connect(Provider).getWhiteListedTokensAddress(toBytes32(symbol))
+//     const abi = symbol === "Matic" ? matic.abi :(symbol === "Shib" ? shib.abi :  usdt.abi )
+//     const tokenContract = new ethers.Contract(address, abi)
+//     return tokenContract
+//   }
+
+//   const getTokenContracts = async (symbols, BankContract, Provider) =>{
+//     symbols.map(async symbol =>{
+//       const contract = await getTokenContract(symbol, BankContract, Provider)
+//       setTokenContract(prev => ({...prev, [symbol]: contract}))
+//     })
+//   }
+
+//   const isConnected = () => (Signer !== "undefined") 
+
+//   return 
+//   <div className="App">
+//     <header className="App-Header">
+//       {isConnected() ?(
+//       <div>
+//         <p> welcome {SingerAddress?.substring(0,10)}...</p>
+//       </div>
+//       ) : (
+//       <div>
+//         <p> you are not connected.</p>
+//         <button onClick="">Connect MetaMask</button>
+//       </div>
+//       ) }
+//     </header>
+//   </div>;
+// }
+
+// export default App;
 import './App.css';
 import { ethers } from 'ethers';
 import { useEffect, useState } from 'react';
@@ -23,27 +127,45 @@ function App() {
   const [isDeposit, setIsDeposit] = useState(true);
 
   const toBytes32 = text => ( ethers.utils.formatBytes32String(text) );
-  //const toString = bytes32 => ( ethers.utils.parseBytes32String(bytes32) );
+  const toString = bytes32 => ( ethers.utils.parseBytes32String(bytes32) );
   const toWei = ether => ( ethers.utils.parseEther(ether) );
   const toEther = wei => ( ethers.utils.formatEther(wei).toString() );
   const toRound = num => ( Number(num).toFixed(2) );
 
   useEffect(() => {
+    const bankAddress = "0x2ED2BD2832573432ca508347aD4636fFb17f0301";
     const init = async () => {
       const provider = await new ethers.providers.Web3Provider(window.ethereum)
       setProvider(provider)
 
-      const bankContract = await new ethers.Contract("0x2ED2BD2832573432ca508347aD4636fFb17f0301", bankArtifact.abi)
+      const bankContract = await new ethers.Contract(bankAddress, bankArtifact.abi)
       setBankContract(bankContract)
 
-      const maticContract = await new ethers.Contract("0x6fa805874201c5F77C7e07AcA0f4B1fAa2bA21Df", maticArtifact.abi)
-      const shibContract = await new ethers.Contract("0xb81071D1ED34dB03C3E821a278184C2368e8c6b0", shibArtifact.abi)
-      const usdtContract = await new ethers.Contract("0x72e66e54c569B06827bF86417AE9C9D7a5B997B4", usdtArtifact.abi)
-      setTokenContracts({maticContract,shibContract,usdtContract})
-      setTokenSymbols(["Eth","Matic","Shib","Usdt"])
+      bankContract.connect(provider).getWhitelistedSymbols()
+        .then((result) => {
+          const symbols = result.map(s => toString(s))
+          setTokenSymbols(symbols);
+         getTokenContracts(symbols, bankContract, provider);
+
+        })
+
     }
     init();
-  }, [])
+  },[]);
+
+  const getTokenContract = async (symbol, bankContract, provider) => {
+    const address = await bankContract.connect(provider).getWhitelistedTokenAddress( toBytes32(symbol) )
+    const abi = symbol === 'Matic' ? maticArtifact.abi : (symbol === 'Shib' ? shibArtifact.abi : usdtArtifact.abi)
+    const tokenContract = await new ethers.Contract(address, abi)
+    return tokenContract;
+  }
+
+  const getTokenContracts = async (symbols, bankContract, provider) => {
+    symbols.map(async symbol => {
+      const contract = await getTokenContract(symbol, bankContract, provider)
+      setTokenContracts(prev => ({...prev, [symbol]:contract}))
+    })
+  }
 
   const isConnected = () => (signer !== undefined)
 
@@ -123,9 +245,8 @@ function App() {
       <header className="App-header">
         {isConnected() ? (
           <div>
-          <h2> Welcome, you can deposit and withdraw your tokens over here</h2>
             <p>
-              You are connected to account : {signerAddress?.substring(0,10)}...
+              Welcome {signerAddress?.substring(0,10)}...
             </p>
             <div>
               <div className="list-group">
